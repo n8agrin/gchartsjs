@@ -22,6 +22,26 @@ THE SOFTWARE.
 
 // ...on to the code!
 (function(){
+
+// Simplified Inheritance,
+// Courtesy of http://phrogz.net/js/classes/OOPinJS2.html
+Function.prototype.inheritsFrom = function(parentClassOrObject) { 
+  if (parentClassOrObject.constructor == Function) { 
+    //Normal Inheritance 
+    this.prototype = new parentClassOrObject;
+    this.prototype.constructor = this;
+    this.prototype.parent = parentClassOrObject.prototype;
+  } 
+  else { 
+    //Pure Virtual Inheritance 
+    this.prototype = parentClassOrObject;
+    this.prototype.constructor = this;
+    this.prototype.parent = parentClassOrObject;
+  } 
+  return this;
+}
+  
+  
 //
 // gchartjs, a Javascript dynamo for the Google Charts API
 // **js syntax largely inspired by jQuery and Prototype
@@ -64,16 +84,8 @@ THE SOFTWARE.
 // Chart size     chs=
 // Chart type     cht=
 
-// GChart parent object
-var GChart = window.GChart = function(options) {
-  options = options || {};
-  this.height = options['height'] || this.height;
-  this.width  = options['width']  || this.width;
-  this.type   = options['type']   || this.type;
-}
-
-// GChart public properties
-GChart.prototype = {
+// Chart virtual object
+var Chart = {
   VERSION:     '0.1',
   BASE_URL:    'http://chart.apis.google.com/chart?',
   CHART_TYPES: ['lc',    // line chart
@@ -248,6 +260,29 @@ GChart.prototype = {
   }
 };
 
+// GChart parent object
+var GChart = window.GChart = function(options) {
+  options = options || {};
+  this.height = options['height'] || this.height;
+  this.width  = options['width']  || this.width;
+  this.type   = options['type']   || this.type;
+}
+GChart.inheritsFrom(Chart);
+
+// LineChart object
+GChart.LineChart = function(options) {
+  this.parent.constructor.apply(this, arguments);
+  this.type = options['type'] || 'lc';
+}
+GChart.LineChart.inheritsFrom(GChart);
+
+// LineChartXY object
+GChart.LineChartXY = function(options) {
+  this.parent.constructor.apply(this, arguments);
+  this.type = options['type'] || 'lxy';
+}
+GChart.LineChartXY.inheritsFrom(GChart);
+
 // Data object which holds an internal array of data points and a hash of
 // sytle options which include:
 // {
@@ -258,19 +293,5 @@ GChart.Data = function(data, options) {
   this.data    = data    || [];
   this.options = options || {};
 };
-
-// subclass of the Chart object
-GChart.LineChart = function(options) {
-  GChart.apply(this, arguments);
-  this.type = options['type'] || 'lc';
-}
-GChart.LineChart.prototype = new GChart;
-
-// subclass of the Chart object
-GChart.LineChartXY = function(options) {
-  GChart.apply(this, arguments);
-  this.type = options['type'] || 'lxy';
-}
-GChart.LineChartXY.prototype = new GChart;
 
 })(); // end of gchartjs :)
