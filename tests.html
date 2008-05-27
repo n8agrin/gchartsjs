@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<title>JSSpec results</title>
+<link rel="stylesheet" type="text/css" href="jsspec/JSSpec.css" />
+<script type="text/javascript" src="jsspec/diff_match_patch.js"></script>
+<script type="text/javascript" src="jsspec/JSSpec.js"></script>
+<script type="text/javascript" src="gcharts.js"></script>
+<script type="text/javascript">// <![CDATA[
+
+function genRandNumArray(length, min, max) {
+  length = length || 10;
+  min = min || 0;
+  max = max || Math.round(Math.random() * 100);
+  
+  var arr = [];
+  while(length--) {
+    var val = Math.round(Math.random() * max);
+    val = val < min ? val + min : val;
+    arr.push(val);
+  }
+  return arr;
+}
+
+describe('GChart', {
+  before_each : function() {
+    chart = new GChart.LineChart();
+    chart.addData(new GChart.Data(genRandNumArray(10)));
+  },
+  
+  'should throw an error if there is no data': function() {
+    try {
+      chart.dataSets = [];
+      chart.toUri();
+    }
+    catch(e) {
+      value_of(e).should_be("You must provide data for the chart.");
+    }
+  },
+  
+  'should throw an error if there is no type': function() {
+    try {
+      delete chart.type;
+      chart.toUri();
+    }
+    catch(e) {
+      value_of(e).should_be("You must specify a supported chart type.");
+    }
+  },
+  
+  'should throw an error if there is an unsupported type': function() {
+    try {
+      chart.type = 'foobar';
+      chart.toUri();
+    }
+    catch(e) {
+      value_of(e).should_be("Chart type 'foobar' is not currently supported.");
+    }
+  },
+  
+  'should throw an error if the size is <= 0 or > 300,000 pixels': function() {
+    var expected_error = "Chart cannot be larger than 300,000 pixels squared or less than or equal to 0 pixels squared.";
+    try {
+      chart.height = 3453573459734853;
+      chart.width = 998709879087;
+      chart.toUri();
+    }
+    catch(e) {
+      value_of(e).should_be(expected_error);
+    }
+    try {
+      chart.height = -10;
+      chart.width = 100;
+      chart.toUri();
+    }
+    catch(e) {
+      value_of(e).should_be(expected_error);
+    }
+    try {
+      chart.height = 0;
+      chart.width = 0;
+      chart.toUri();
+    }
+    catch(e) {
+      value_of(e).should_be(expected_error);
+    }
+  },
+  
+  'should be ok if there is data, a type and a size': function() {
+    try {
+      chart.height = 100;
+      chart.width  = 100;
+      chart.type   = 'lc';
+      chart.toUri();
+      value_of(typeof(chart.toUri())).should_be('string');
+    }
+    catch(e) {
+      value_of(e).should_be(undefined);
+    }
+  },
+  
+  'should require a type and color when adding a solid fill': function() {
+    var expected_error = "You must define a fill type, element and color for a fill.";
+
+    try {
+      chart.addFill({element: 'bg', color: 'ff0000'});
+    }
+    catch(e) {
+      value_of(e).should_be(expected_error);
+    }    
+    try {
+      chart.addFill({type: 's', color: 'ff0000'});
+    }
+    catch(e) {
+      value_of(e).should_be(expected_error);
+    }
+    try {
+      chart.addFill({element: 'bg', type: 's'});
+    }
+    catch(e) {
+      value_of(e).should_be(expected_error);
+    }
+  },
+  
+  'should generate a chart title if one is provided': function() {
+    chart.title = 'Chart title';
+    chart.height = 10;
+    chart.width = 10;
+    value_of(chart.toUri()).should_match(/chtt=Chart\+title/);
+    
+    chart.title = '';
+    value_of(chart.toUri()).should_not_match(/chtt=/);
+  }
+});
+
+describe('Fills', {
+  before_each: function() {
+    console.log('foo');
+    lc = new GChart.VerticalBarChart({height: 100, width: 100});
+    lc.addData(new GChart.Data([1,2,3,4], {color: 'ff0000', label: 'foo'}));
+    lc.addData(new GChart.Data([5,6,7,8], {color: '00ffff', label: 'bar'}));
+  },
+  
+  // 'should add color properties': function() {
+  //   value_of(lc.toUri()).should_match(/chco=ff0000,00ffff/);
+  // },
+  
+  'should add solid fill': function() {
+    lc.addFill({
+      type: 'solid',
+      element: 'background',
+      opacity: 20,
+      color: '000000'
+    });
+    lc.addFill({
+      type: 's',
+      element: 'chart',
+      color: '3d3d3d'
+    });
+    lc.addFill({
+      element: 'transparency',
+      type: 'solid',
+      opacity: 10,
+      color: '999999'
+    });
+    value_of(lc.toUri()).should_match(/chf=bg,s,00000020|c,s,3d3d3d|a,s,99999910/);
+  },
+  
+  'should add a gradient fill': function() {
+    lc.addFill({
+      element: 'c',
+      type: 'gradient',
+      angle: 90,
+      offset: [0,1],
+      color:  ['999999', 'ff0000']
+    });
+    lc.addFill({
+      element: 'bg',
+      type: 'linear gradient',
+      angle: 0,
+      offset: 0,
+      color: 'ffffff'
+    })
+    value_of(lc.toUri()).should_match(/c,lg,90,999999,0,ff0000,1|bg,lg,0,ffffff,0/);
+  },
+  
+  'should add a stripe fill': function() {
+    lc.addFill({
+      element: 'chart',
+      type: 'stripes',
+      angle: 0,
+      width: [0.35,0.45],
+      color: ['999999', 'ff0000']
+    });
+    lc.addFill({
+      element: 'background',
+      type: 'stripes',
+      angle: 10,
+      width: 0.5,
+      color: ['999999', 'ff0000']
+    });
+    value_of(lc.toUri()).should_match(/c,ls,0,999999,0.35,ff0000,0.45|bg,ls,10,999999,0.5,ff0000,0.5/);
+  }
+});
+
+describe('Axes', {});
+
+describe('GridLines', {});
+
+
+
+// ]]></script>
+</head>
+<body></body>
+</html>
