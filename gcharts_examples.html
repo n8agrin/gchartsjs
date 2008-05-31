@@ -6,7 +6,7 @@
 </head>
 <body id="gcharts">
 <div id="images"></div>
-<script type="text/javascript" charset="utf-8" src="prototypal.js"></script>
+<script type="text/javascript" charset="utf-8" src="gcharts.js"></script>
 <script type="text/javascript" charset="utf-8">
 function genRandNumArray(length, min, max) {
   length = length || 10;
@@ -27,7 +27,7 @@ function displayGraph(img) {
   body.appendChild(img);
 }
 
-var lc = gchart.new('vertical_bar_chart', {grouped: true});
+var lc = gchart.sparkline({height: 200, width: 400});
 lc.add_data_set({
   data: genRandNumArray(10,0,40),
   color: 'ff0000',

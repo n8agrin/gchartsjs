@@ -129,7 +129,21 @@ gchart.base = function (specs) {
         };
       }
       else {
-        this[attribute] = provider[attribute];
+        if (typeof provider[attribute] === 'object') {
+          if (provider[attribute].constructor === Array) {
+            this[attribute] = provider[attribute].concat();
+          }
+          else if (provider[attribute].constructor === Object){
+            var tmp = {};
+            for (var prop in provider[attribute]) {
+              tmp[prop] = provider[attribute][prop];
+            }
+            this[attribute] = tmp;
+          }
+        }
+        else {
+          this[attribute] = provider[attribute];   
+        }
       }
     }
     return this;
