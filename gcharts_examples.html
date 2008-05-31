@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<title>google_charts api</title>
+</head>
+<body id="gcharts">
+<div id="images"></div>
+<script type="text/javascript" charset="utf-8" src="prototypal.js"></script>
+<script type="text/javascript" charset="utf-8">
+function genRandNumArray(length, min, max) {
+  length = length || 10;
+  min = min || 0;
+  max = max || Math.round(Math.random() * 1000);
+  
+  var arr = [];
+  for (var i = 0; i < length; i++) {
+    var val = Math.round(Math.random() * max);
+    val = val < min ? val + min : val;
+    arr.push(val);
+  }
+  return arr;
+}
+
+function displayGraph(img) {
+  var body = document.getElementById('gcharts');
+  body.appendChild(img);
+}
+
+var lc = gchart.new('vertical_bar_chart', {grouped: true});
+lc.add_data_set({
+  data: genRandNumArray(10,0,40),
+  color: 'ff0000',
+  label: 'red'
+});
+lc.add_data_set({
+  data: genRandNumArray(10,0,40),
+  color: '000000',
+  label: 'black'
+});
+lc.add_fill({
+  element: 'chart',
+  type: 'stripes',
+  angle: 90,
+  width:  [0.25,0.25],
+  color:  ['999999', '3c3c3c']
+});
+lc.add_axis({
+  type: 'x',
+  labels: [1,2,3,4]
+})
+displayGraph(lc.to_img());
+console.log(lc.to_url('simple'));
+
+</script>
+</body>
